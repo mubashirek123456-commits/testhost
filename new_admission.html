@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student | Management System</title>
+    <style>
+        /* 1. The Global Fix: Prevents width exceeding the right */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6f9;
+            padding: 20px;
+            color: #333;
+        }
+
+        .card {
+            max-width: 700px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        #homeBtn {
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            background-color: #698f80;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #homeBtn:hover {
+            background-color: #8392af;
+        }
+
+        h2 { 
+            text-align: center; 
+            margin-top: 8px;
+            margin-bottom: 25px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        /* 2. Responsive Grid: 1 column on mobile, 2 on desktop */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Grouping Labels and Inputs */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #64748b;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            width: 100%; /* Stays inside thanks to border-box */
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background-color: #fcfcfc;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            width: 100%;
+            padding: 14px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        .loader {
+            border: 3px solid #fff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin .5s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div style="display:flex;justify-content:center;align-items:center;">
+        <a id="homeBtn" href="./home.html"><span style="font-size:smaller">&#9664;</span> Back</a>
+    </div>
+    <h2>Add New Student</h2>
+
+    <form id="studentForm">
+
+        <div class="grid">
+            
+            <div class="input-group">
+                <label>Student Name</label>
+                <input id="stdname" type="text" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-group">
+                <label>Date of Admission</label>
+                <input id="date" type="date">
+            </div>
+
+            <div class="input-group">
+                <label>School</label>
+                <input id="school" type="text" placeholder="School Name">
+            </div>
+
+            <div class="input-group">
+                <label>Address</label>
+                <input id="address" type="text" placeholder="Current Address" required>
+            </div>
+
+            <div class="input-group">
+                <label>Phone Number</label>
+                <input id="phone" type="tel" placeholder="Contact Number" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" required>
+            </div>
+
+            <div class="input-group">
+                <label>Class</label>
+                <input id="class" type="number" placeholder="Grade" required>
+            </div>
+
+            <div class="input-group">
+                <label>Division</label>
+                <input id="division" type="text" placeholder="Section">
+            </div>
+
+            <div class="input-group">
+                <label>Medium</label>
+                <select id="medium" required>
+                    <option value="EM">EM</option>
+                    <option value="MM">MM</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>NMMS Qualified</label>
+                <select id="nmms">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Total Fee</label>
+                <input id="total" type="number" placeholder="0.00">
+            </div>
+
+            <div class="input-group">
+                <label>Reduction</label>
+                <input id="reduction" type="number" placeholder="0.00">
+            </div>
+        </div>
+
+        <button type="submit" id="saveBtn">
+            <span id="btnText">Save</span>
+            <span id="spinner" class="loader" style="display:none;"></span>
+        </button>
+
+    </form>
+</div>
+
+<script>
+    document.getElementById("studentForm").addEventListener("submit", save);
+
+    async function save(e){
+        e.preventDefault();
+
+        const form = document.getElementById("studentForm");
+
+        // ✅ trigger browser validation
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Basic UI feedback: Disable button while saving
+        const btn = document.getElementById("saveBtn");
+        const btnText = document.getElementById("btnText");
+        const spinner = document.getElementById("spinner");
+
+        btnText.innerText = "Saving";
+        spinner.style.display = "inline-block";
+        btn.disabled = true;
+
+        const data = {
+            name: stdname.value,
+            date: date.value,
+            school: school.value,
+            address: address.value,
+            phone: phone.value,
+            class: document.getElementById("class").value,
+            division: division.value,
+            medium: medium.value,
+            nmms: nmms.value,
+            total: total.value ? total.value : 0,
+            reduction: reduction.value ? reduction.value : 0
+        };
+
+        try {
+            const response = await fetch("http://127.0.0.1:8000/add-student", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+
+            const res_data = await response.json();
+
+            if (res_data.success) {
+                alert("Student details saved successfully!");
+                location.reload();
+            } else {
+                alert("Failed to save. Server returned an error.");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Could not connect to the server. Make sure your backend is running on port 8000.");
+        } finally {
+            btnText.innerText = "Save";
+            spinner.style.display = "none";
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>

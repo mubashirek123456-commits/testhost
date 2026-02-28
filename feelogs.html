@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fee Logs</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family:Segoe UI,Roboto,Arial;
+    background:#f4f7f9;
+    padding:20px;
+}
+
+#homeBtn {
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    background-color: #698f80;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#homeBtn:hover {
+    background-color: #8392af;
+}
+
+.top-bar{
+    display:grid;
+    row-gap: 8px;
+    margin-bottom:20px;
+}
+
+.top-bar span{
+    font-size: 24px;
+    font-weight:bold;
+}
+
+@media (min-width:520px){
+    .top-bar{
+        display:flex;
+        justify-content:space-between;
+        align-items:start;
+    }
+}
+
+#downloadBtn{
+    padding:10px 16px;
+    border:none;
+    border-radius:6px;
+    background:#1e293b;
+    color:white;
+    cursor:pointer;
+    font-weight:600;
+}
+
+h2{margin-bottom:20px}
+
+.filters{
+    display:grid;
+    gap:12px;
+    margin-bottom:20px;
+    grid-template-columns:1fr;
+}
+
+@media (min-width:480px){
+    .filters{grid-template-columns:repeat(2,1fr)}
+}
+
+@media (min-width:768px){
+    .filters{grid-template-columns:repeat(3,1fr)}
+}
+
+@media (min-width:1024px){
+    .filters{grid-template-columns:repeat(5,1fr)}
+}
+
+.filters input,.filters select{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+.table-wrapper{
+    overflow-x:auto;
+    background:#fff;
+    border-radius:8px;
+}
+
+table{
+    width:100%;
+    min-width:900px;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    white-space:nowrap;
+}
+
+th{
+    background:#2f3542;
+    color:#fff;
+    position:sticky;
+    top:0;
+}
+</style>
+</head>
+
+<body>
+
+<div style="display:flex;justify-content:start;align-items:center;">
+    <a id="homeBtn" href="./home.html"><span style="font-size:smaller">&#9664;</span> Back</a>
+</div>
+
+<div class="top-bar">
+    <span>Fee Logs</span>
+    <button id="downloadBtn">Download Receipts</button>
+</div>
+
+<div class="filters">
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<select id="mediumFilter">
+<option value="">All Medium</option>
+<option>EM</option>
+<option>MM</option>
+</select>
+
+<input id="nameFilter" placeholder="Student Name">
+<input id="admFilter" placeholder="Admission No">
+<input id="billFilter" placeholder="Bill No (eg:31110,31115,..)">
+</div>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th><input type="checkbox" id="selectAll"></th>
+<th>Date</th>
+<th>Bill</th>
+<th>Adm</th>
+<th>Name</th>
+<th>Class</th>
+<th>Medium</th>
+<th>Total Fee</th>
+<th>Prev Paid</th>
+<th>Paid Amount</th>
+<th>Pay Mode</th>
+<th>Balance</th>
+<th>Due Date</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<script>
+const tableBody = document.getElementById("tableBody");
+
+const classFilter = document.getElementById("classFilter");
+const mediumFilter = document.getElementById("mediumFilter");
+const nameFilter = document.getElementById("nameFilter");
+const admFilter = document.getElementById("admFilter");
+const billFilter = document.getElementById("billFilter");
+const selectAll = document.getElementById("selectAll");
+
+let data = [];
+let filteredData = [];
+
+selectAll.addEventListener("change",()=>{
+    const checks = document.querySelectorAll(".rowCheck");
+    checks.forEach(c=> c.checked = selectAll.checked);
+});
+
+/* 🔥 LOAD FROM BACKEND */
+async function load(){
+    try{
+        const res = await fetch("http://127.0.0.1:8000/feelogs");   // 🔥 change if endpoint name different
+        data = await res.json();
+        render(data);
+    }catch(e){
+        alert("Failed to load fee logs");
+    }
+}
+load();
+
+/* render */
+function render(list){
+    tableBody.innerHTML="";
+    filteredData = list;
+    list.forEach(r=>{
+        tableBody.innerHTML+=`
+        <tr style="text-align:center;">
+            <td>
+                <input type="checkbox" class="rowCheck" data-bill="${r.bill_no}">
+            </td>
+            <td>${r.bill_date}</td>
+            <td><b>${r.bill_no}</b></td>
+            <td>${r.adm_no}</td>
+            <td>${r.std_name}</td>
+            <td>${r.std_class}</td>
+            <td>${r.medium}</td>
+            <td>${r.total_fee}</td>
+            <td>${r.prev_paid}</td>
+            <td>${r.paid_amt}</td>
+            <td>${r.payment_method}</td>
+            <td>${r.balance}</td>
+            <td>${r.due_date}</td>
+        </tr>`;
+    });
+}
+
+/* filter */
+function filterData(){
+    const c = classFilter.value.toLowerCase();
+    const m = mediumFilter.value.toLowerCase();
+    const n = nameFilter.value.toLowerCase();
+    const a = admFilter.value.toLowerCase();
+    const b = billFilter.value.toLowerCase()==="bill-2026-" ? "" : billFilter.value.toLowerCase();
+
+    const filtered = data.filter(r=>
+        (!c || r.std_class.toLowerCase()==c) &&
+        (!m || r.medium.toLowerCase()==m) &&
+        (!n || r.std_name.toLowerCase().includes(n)) &&
+        (!a || String(r.adm_no).toLowerCase().includes(a)) &&
+        (!b || r.bill_no.toLowerCase().includes(b))
+    );
+
+    render(filtered);
+}
+
+[classFilter,mediumFilter,nameFilter,admFilter,billFilter]
+.forEach(el=>el.addEventListener("input",filterData));
+
+document.getElementById("downloadBtn").addEventListener("click",()=>{
+
+    const selected = [];
+
+    document.querySelectorAll(".rowCheck:checked").forEach(cb=>{
+        const bill = cb.dataset.bill;
+        const receiptData = data.find(d=> d.bill_no === bill);
+        if(receiptData) selected.push(receiptData);
+    });
+
+    if(!selected.length){
+        alert("Select at least one receipt");
+        return;
+    }
+
+    sessionStorage.setItem("multi_receipts", JSON.stringify(selected));
+
+    console.log(selected);
+
+    setTimeout(()=>{
+        window.open("multiple_receipt.html","_blank");
+    },100);
+});
+
+</script>
+
+</body>
+</html>

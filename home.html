@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institution Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* 1. Base Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Centers everything vertically on screen */
+            padding: 20px;
+        }
+
+        /* 2. Main Container */
+        .portal-container {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            background: white;
+            padding: 50px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        /* 3. Logo Banner */
+        .banner-logo {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 50px; /* Space between logo and buttons */
+        }
+
+        /* 4. Button Row Logic */
+        .button-row {
+            display: flex;
+            flex-direction: row; /* Desktop: Side by side */
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap; /* Allows wrapping on mobile */
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 18px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.25s ease;
+            min-width: 200px;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Color Coding */
+        .btn-admission { background-color: #0056b3; color: white; }
+        .btn-logs      { background-color: #6c757d; color: white; }
+        .btn-payment   { background-color: #007bff; color: white; }
+        .btn-students  { background-color: #28a745; color: white; }
+
+        /* Hover Effects */
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            filter: brightness(1.1);
+        }
+
+        /* 5. RESPONSIVE DESIGN */
+        
+        /* Tablets (iPad/Medium Screens) */
+        @media (max-width: 992px) {
+            .button-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* 2x2 Grid */
+                max-width: 500px;
+                margin: 0 auto;
+            }
+            .btn { min-width: unset; }
+        }
+
+        /* Mobile Phones */
+        @media (max-width: 500px) {
+            .portal-container {
+                padding: 30px 15px;
+            }
+            .banner-logo {
+                margin-bottom: 30px;
+            }
+            .button-row {
+                grid-template-columns: 1fr; /* Stacks vertically */
+            }
+            .btn {
+                width: 100%;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-container">
+        <img src="../assets/banner_logo.png" 
+             alt="Institution Logo" 
+             class="banner-logo">
+
+        <div class="button-row">
+            <a href="./new_admission.html" class="btn btn-admission">New Admission</a>
+            <a href="./students.html" class="btn btn-students">Students</a>
+            <a href="./feelogs.html" class="btn btn-logs">Fee Logs</a>
+            <a href="./fee_payment.html" class="btn btn-payment">Fee Payment</a>
+        </div>
+    </div>
+
+</body>
+</html>

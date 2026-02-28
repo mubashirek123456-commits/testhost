@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Students</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+    font-family:Segoe UI,Roboto,Arial;
+    background:#f4f7f9;
+    padding:20px;
+}
+
+#homeBtn{
+    text-decoration:none;
+    color:white;
+    font-weight:600;
+    background:#698f80;
+    padding:6px 12px;
+    border-radius:8px;
+}
+#homeBtn:hover{background:#8392af}
+
+h2{margin-bottom:20px}
+
+/* 🔥 Responsive Filters */
+.filters{
+    display:grid;
+    gap:12px;
+    margin-bottom:20px;
+    grid-template-columns:1fr;
+}
+@media (min-width:480px){
+    .filters{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:768px){
+    .filters{grid-template-columns:repeat(3,1fr)}
+}
+
+.filters input{
+    width:100%;
+    padding:12px;
+    font-size:16px;
+    border:1px solid #ddd;
+    border-radius:6px;
+}
+
+/* 🔥 Table */
+.table-wrapper{
+    overflow-x:auto;
+    background:#fff;
+    border-radius:8px;
+}
+
+table{
+    width:100%;
+    min-width:1000px;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+    white-space:nowrap;
+}
+
+th{
+    background:#2f3542;
+    color:#fff;
+    position:sticky;
+    top:0;
+}
+</style>
+</head>
+
+<body>
+
+<div style="margin-bottom:10px">
+    <a id="homeBtn" href="./home.html">&#9664; Back</a>
+</div>
+
+<h2>Students</h2>
+
+<!-- 🔥 Filters -->
+<div class="filters">
+    <input id="admFilter" placeholder="Admission No">
+    <input id="nameFilter" placeholder="Student Name">
+    <input id="dateFilter" placeholder="Admission Date (dd-mm-yyyy)">
+</div>
+
+<!-- 🔥 Table -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>Adm No</th>
+<th>Name</th>
+<th>Adm Date</th>
+<th>School</th>
+<th>Address</th>
+<th>Mobile</th>
+<th>Class</th>
+<th>Medium</th>
+<th>NMMS</th>
+<th>Total Fee</th>
+<th>Fee Reduction</th>
+<th>Total Paid</th>
+<th>Balance</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<script>
+const tableBody = document.getElementById("tableBody");
+
+const admFilter = document.getElementById("admFilter");
+const nameFilter = document.getElementById("nameFilter");
+const dateFilter = document.getElementById("dateFilter");
+
+let data = [];
+
+/* 🔥 Load students */
+async function load(){
+    try{
+        const res = await fetch("http://127.0.0.1:8000/students");
+        data = await res.json();
+        render(data);
+    }catch(e){
+        alert("Failed to load students");
+    }
+}
+load();
+
+/* 🔥 Render */
+function render(list){
+    tableBody.innerHTML="";
+    list.forEach(r=>{
+        tableBody.innerHTML += `
+        <tr style="text-align:center;">
+            <td><b>${r.adm_no}</b></td>
+            <td>${r.std_name}</td>
+            <td>${r.adm_date}</td>
+            <td>${r.school}</td>
+            <td>${r.address}</td>
+            <td>${r.mobile}</td>
+            <td>${r.std_class}</td>
+            <td>${r.medium}</td>
+            <td>${r.nmms}</td>
+            <td>${r.total_fee}</td>
+            <td>${r.fee_reduction}</td>
+            <td>${r.prev_paid}</td>
+            <td>${r.balance}</td>
+        </tr>`;
+    });
+}
+
+/* 🔥 Filter */
+function filterData(){
+    const a = admFilter.value.toLowerCase();
+    const n = nameFilter.value.toLowerCase();
+    const d = dateFilter.value.toLowerCase();
+
+    const filtered = data.filter(r =>
+        (!a || String(r.adm_no).toLowerCase().includes(a)) &&
+        (!n || r.std_name.toLowerCase().includes(n)) &&
+        (!d || r.adm_date.toLowerCase().includes(d))
+    );
+
+    render(filtered);
+}
+
+[admFilter,nameFilter,dateFilter].forEach(el=>{
+    el.addEventListener("input",filterData);
+});
+</script>
+
+</body>
+</html>

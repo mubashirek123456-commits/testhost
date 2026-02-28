@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Hall Ticket</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght,YOPQ@100..900,300&family=Orbitron:wght@400..900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+
+        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+        <style>
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            
+            .a4-page {
+                font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                padding: 0;
+                margin: 0;
+                background: white;
+            }
+
+            .container {
+                display: grid;
+                padding: 24px;
+                row-gap: 16px;
+            }
+
+            #receipt-wrapper {
+                padding: 1px;              /* ⭐ print safe spacing */
+                background: white;
+            }
+
+            .content {
+                font-family: "Kumbh Sans", sans-serif;
+                border: 2px solid #000;
+                padding: 4px 16px 4px 16px;
+            }
+
+            .main-header {
+                position: relative;
+                display: flex;
+                justify-content: center; /* center content */
+                align-items: center;
+            }
+
+            .main-header-logo {
+                position: absolute;
+                left: 0;
+            }
+
+            .main-header-content {
+                display: grid;
+                justify-items: center;
+            }
+
+            .main-header-profile {
+                display: grid;
+                text-align: center;
+            }
+
+            .main-header-profile .org-name {
+                font-size: large;
+                font-weight: bold;
+            }
+            
+            .main-header-profile .org-address, .org-contact {
+                font-size: 14px;
+            }
+
+            .main-header-title {
+                width: fit-content;
+                margin-top: 8px;
+                padding: 8px;
+                background-color: #1e293b;
+                color: white;
+                font-size: small;
+                font-weight: 500;
+                border-radius: 4px;
+            }
+
+            .logo {
+                max-height: 80px;
+            }
+
+            .hr-main-solid{
+                height: 2px;
+                background-color: #000;
+                border: none;
+            }
+
+            .bill-info {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .bill-info-content-1 {
+                display: flex;
+                column-gap: 20px;
+            }
+
+            .bill-info-content-2 {
+                text-align: end;
+            }
+
+            .bill-info-items {
+                display: grid;
+                row-gap: 2px;
+            }
+
+            .bill-info-item-head {
+                font-weight: 600;
+                font-size: small;
+                color: #93a2b8;
+            }
+
+            .bill-info-item-billno, .bill-info-item-year, .bill-info-item-date {
+                font-weight: bolder;
+            }
+
+            .hr-dashed{
+                margin: 2px 0 2px 0;
+                border: 1px dashed rgb(193, 186, 186);
+            }
+
+            .student-details {
+                display: grid;
+                padding: 0;
+                margin: 0;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .student-details-table {
+                border-collapse: separate;
+                border-spacing: 0 10px;
+            }
+
+            .student-details-table .std-name {
+                font-weight: bold;
+            }
+            
+            .student-details-table .adm-no, .class-div, .payment-mode {
+                font-weight: 600;
+            }
+
+            .student-details-table-col-head {
+                font-weight: 600;
+                font-size: small;
+                color: #93a2b8;
+            }
+
+            .student-details-table-col-desc {
+                padding-left: 20px;
+
+            }
+            
+            .fee-details-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .fee-details-table tr td {
+                padding: 8px;
+            }
+
+            .fee-details-table .description {
+                background-color: #f7fafc;
+                font-weight: 500;
+                font-size: small;
+            }
+
+            .fee-details-table .description td {
+                color: #65758c;
+                border-style: solid;
+                border-color: #e1e8f0;
+                border-width: 2px 0 2px 0;
+            }
+
+            .fee-details-table-col-desc {
+                text-align: right;
+            }
+
+            .fee-details-table .total-amt td {
+                color: #324154;
+                font-size: 13px;
+                border-style: solid;
+                border-color: #e1e8f0;
+                border-width: 0 0 1px 0;
+            }
+
+            .fee-details-table .total-amt .fee-details-table-col-desc {
+                font-weight: 700;
+            }
+
+            .fee-details-table .previous-amt td {
+                color: #65758c;
+                font-size: 13px;
+                border-style: solid;
+                border-color: #e1e8f0;
+                border-width: 0 0 1px 0;
+            }
+
+            .fee-details-table .amount-paid td {
+                color: #065e45;
+                font-weight: bold;
+                font-size: 14px;
+                background-color: #ebfcf4;
+                border-style: solid;
+                border-color: #a7f2cf;
+                border-width: 0 0 1px 0;
+            }
+
+            .fee-details-table .balance-amt td {
+                font-weight: bold;
+                font-size: 14px;
+                border-style: solid;
+                border-color: #e1e8f0;
+                border-width: 0 0 1px 0;
+            }
+
+            .due-details {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-weight: 600;
+                font-size: 12px;
+                margin-top: 10px;
+                background-color: #fffbeb;
+                border: 1px solid #fce68b;
+                border-radius: 4px;
+                padding: 10px 12px 10px 12px;
+            }
+
+            .due-title {
+                color: #c4540a;
+            }
+
+            .due-date {
+                color: #78350e;
+                font-size: 14px;
+                font-weight: bold;
+            }
+
+            .hr-solid{
+                border: 1px solid #e1e8f0;
+                border-width: 0 0 1px 0;
+            }
+
+            .footer {
+                margin: 24px 0 4px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: end;
+            }
+
+            .footer-1 {
+                color: #65758c;
+                font-size: 12px;
+                font-style: italic;
+            }
+
+            .footer-2 {
+                color: #65758c;
+                text-align: center;
+                font-size: 10px;
+                font-weight: 600;
+            }
+
+            .footer-2 hr {
+                width: 200px;
+                border: 1px solid #65758c;
+                border-width: 0 0 1px 0;
+            }
+
+            .actions{
+                display:flex;
+                gap:10px;
+                justify-content:flex-end;
+                margin:10px 20px;
+            }
+            
+            .actions button{
+                padding:8px 14px;
+                border:none;
+                border-radius:6px;
+                background:#1e293b;
+                color:white;
+                cursor:pointer;
+                font-size:13px;
+            }
+            
+            /* Hide buttons while printing */
+            @media print{
+                .actions{
+                    display:none;
+                }
+            }
+
+        </style>
+    </head>
+    <body class="a4-page">
+
+        <div class="actions">
+            <button onclick="window.print()">🖨 Print</button>
+            <button onclick="downloadPDF()">⬇ Download</button>
+        </div>
+
+        <div id="receipt-wrapper">
+
+            <div class="container">
+
+                <div class="content">
+
+                    <div class="main-header">
+                        <div class="main-header-logo">
+                            <img class="logo" src="../assets/logo.jpeg" alt="logo">
+                        </div>
+                        <div class="main-header-content">
+                            <div class="main-header-profile">
+                                <span class="org-name">PHOENIX EDU CAMPUS</span>
+                                <span class="org-address">Near GHSS Othukkungal, Othukkungal, Malappuram, Kerala, India - 676528</span>
+                                <span class="org-contact">Mob: +91 773 670 0221, +91 799 420 0221</span>
+                            </div>
+                            <div class="main-header-title">
+                                <span class="main-header-content-1">FEE RECEIPT</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="hr-main-solid">
+
+                    <div class="bill-info">
+                        <div class="bill-info-content-1">
+                            <div class="bill-info-items">
+                                <span class="bill-info-item-head">BILL NO.</span>
+                                <span class="bill-info-item-billno" id="billNo"></span>
+                            </div>
+                            <div class="bill-info-items">
+                                <span class="bill-info-item-head">ACADEMIC YEAR</span>
+                                <span class="bill-info-item-year" id="academicYear"></span>
+                            </div>
+                        </div>
+                        <div class="bill-info-content-2">
+                            <div class="bill-info-items">
+                                <span class="bill-info-item-head">DATE</span>
+                                <span class="bill-info-item-date" id="billDate"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="hr-dashed">
+
+                    <div class="student-details">
+                        <div>
+                            <table class="student-details-table">
+                                <tr>
+                                    <td class="student-details-table-col-head">ADMISSION NO.</td>
+                                    <td class="student-details-table-col-desc adm-no" id="admNo"></td>
+                                </tr>
+                                <tr>
+                                    <td class="student-details-table-col-head">CLASS & DIVISION</td>
+                                    <td class="student-details-table-col-desc class-div" id="classDiv"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div>
+                            <table class="student-details-table">
+                                <tr>
+                                    <td class="student-details-table-col-head">STUDENT NAME</td>
+                                    <td class="student-details-table-col-desc std-name" id="studentName"></td>
+                                </tr>
+                                <tr>
+                                    <td class="student-details-table-col-head">PAYMENT MODE</td>
+                                    <td class="student-details-table-col-desc payment-mode" id="paymentMode"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr class="hr-dashed">
+
+                    <div class="fee-details">
+                        <table class="fee-details-table">
+                            <tr class="description">
+                                <td class="fee-details-table-col-head">DESCRIPTION</td>
+                                <td class="fee-details-table-col-desc">AMOUNT</td>
+                            </tr>
+                            <tr class="total-amt">
+                                <td class="fee-details-table-col-head">Total Fee</td>
+                                <td class="fee-details-table-col-desc" id="totalFee"></td>
+                            </tr>
+                            <tr class="previous-amt">
+                                <td class="fee-details-table-col-head">Previously Paid</td>
+                                <td class="fee-details-table-col-desc" id="prevPaid"></td>
+                            </tr>
+                            <tr class="amount-paid">
+                                <td class="fee-details-table-col-head">Amount Paid (This Receipt)</td>
+                                <td class="fee-details-table-col-desc" id="paidNow"></td>
+                            </tr>
+                            <tr class="balance-amt">
+                                <td class="fee-details-table-col-head">Balance Fees</td>
+                                <td class="fee-details-table-col-desc" id="balance"></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="due-details" id="dueBox">
+                        <span class="due-title">NEXT DUE DATE</span>
+                        <span class="due-date" id="dueDate"></span>
+                    </div>
+
+                    <hr class="hr-solid">
+
+                    <div class="footer">
+                        <div class="footer-1">
+                            <span>This is a computer-generated receipt</span>
+                        </div>
+                        <div class="footer-2">
+                            <hr>
+                            <span>AUTHORIZED SIGNATORY</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <script>
+            const r = JSON.parse(sessionStorage.getItem("receipt"));
+            
+            if(!r){
+                alert("No receipt data");
+            }
+            
+            /* ------- Fill data ------- */
+            billNo.innerText = r.bill_no;
+            academicYear.innerText = r.academic_year;
+            billDate.innerText = r.bill_date;
+            
+            admNo.innerText = r.admno;
+            classDiv.innerText = r.std_class + " " + r.medium;
+            studentName.innerText = r.name;
+            paymentMode.innerText = r.payment_method;
+            
+            totalFee.innerText = "₹ " + r.total_fee;
+            prevPaid.innerText = "₹ " + r.prev_paid;
+            paidNow.innerText = "₹ " + r.paid_now;
+            balance.innerText = "₹ " + r.balance;
+            
+            /* ------- Due logic ------- */
+            if(r.due_date){
+                dueDate.innerText = r.due_date;
+            }else{
+                dueBox.style.display = "none";
+            }
+            
+            /* ------- PDF ------- */
+            function downloadPDF(){
+                const element = document.getElementById("receipt-wrapper");
+            
+                const opt = {
+                    margin:0,
+                    filename: 'Fee-Receipt.pdf',
+                    image:{ type:'jpeg', quality:1 },
+                    html2canvas:{ scale:4 },
+                    jsPDF:{ unit:'mm', format:'a4', orientation:'portrait' }
+                };
+            
+                html2pdf().set(opt).from(element).save();
+            }
+        </script>
+
+    </body>
+</html>
