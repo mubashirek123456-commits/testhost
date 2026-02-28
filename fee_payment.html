@@ -341,7 +341,9 @@ document.getElementById("confirmBtn").onclick = async ()=>{
         if(data.success){
             sessionStorage.setItem("receipt", JSON.stringify(data.receipt));
             window.open("receipt.html","_blank");
-            location.reload();
+            setTimeout(()=>{
+                location.reload();
+            }, 1000);
         }else{
             alert("Payment failed");
         }
