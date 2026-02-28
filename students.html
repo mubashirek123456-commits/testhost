@@ -127,7 +127,7 @@ let data = [];
 /* 🔥 Load students */
 async function load(){
     try{
-        const res = await fetch("http://127.0.0.1:8000/students");
+        const res = await fetch("https://testbackend-99um.onrender.com/students");
         data = await res.json();
         render(data);
     }catch(e){

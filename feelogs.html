@@ -187,7 +187,7 @@ selectAll.addEventListener("change",()=>{
 /* 🔥 LOAD FROM BACKEND */
 async function load(){
     try{
-        const res = await fetch("http://127.0.0.1:8000/feelogs");   // 🔥 change if endpoint name different
+        const res = await fetch("https://testbackend-99um.onrender.com/feelogs");   // 🔥 change if endpoint name different
         data = await res.json();
         render(data);
     }catch(e){

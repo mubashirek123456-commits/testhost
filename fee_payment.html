@@ -248,7 +248,7 @@ let selected = null;
 /* ---------- Load Students ---------- */
 async function load(){
     try{
-        const res = await fetch("http://127.0.0.1:8000/students");
+        const res = await fetch("https://testbackend-99um.onrender.com/students");
         students = await res.json();
 
         document.getElementById("loading").style.display="none";
@@ -325,7 +325,7 @@ document.getElementById("confirmBtn").onclick = async ()=>{
     if(amt>selected.balance) return alert("Entered amount is more than balance to pay!");
 
     try{
-        const res = await fetch("http://127.0.0.1:8000/pay-fee",{
+        const res = await fetch("https://testbackend-99um.onrender.com/pay-fee",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({
