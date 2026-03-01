@@ -121,7 +121,7 @@ th{
 
 <div class="top-bar">
     <span>Fee Logs</span>
-    <span id="totalReceivedSpan">Total Received: ₹${totalReceived}</span>
+    <span id="totalReceivedSpan"></span>
     <button id="downloadBtn">Download Receipts</button>
 </div>
 
@@ -207,6 +207,7 @@ load();
 function render(list){
     tableBody.innerHTML="";
     filteredData = list;
+    document.getElementById("totalReceivedSpan").innerText = `Total Received: ₹${totalReceived}`;
     list.forEach(r=>{
         tableBody.innerHTML+=`
         <tr style="text-align:center;">
