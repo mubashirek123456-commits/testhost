@@ -451,22 +451,12 @@ for (let i = 0; i < data.length; i += 2) {
 // },600);
 
 // working on this
-window.addEventListener("load", async () => {
-
-    html2pdf().from(pdfArea).set({
-        margin: 0,
-        filename: "Fee-Receipts.pdf",
-        html2canvas: {
-            scale:2
-        },
-        jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait"
-        },
-    }).save();
-
-});
+html2pdf().from(pdfArea).set({
+    margin:0,
+    filename:"Fee-Receipts.pdf",
+    html2canvas:{scale:2},
+    jsPDF:{unit:"mm", format:"a4"}
+}).save();
 
 </script>
 
