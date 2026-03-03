@@ -17,6 +17,7 @@
     }
     
     .a4-page {
+        page-break-after: always;
         font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         width: 210mm;
         height: 297mm;
@@ -449,7 +450,28 @@ for (let i = 0; i < data.length; i += 2) {
 //     }).save();
 // },600);
 
-setTimeout(() => {
+window.addEventListener("load", async () => {
+
+    // wait one render frame
+    await new Promise(requestAnimationFrame);
+
+    // wait images to fully load
+    const images = document.images;
+    const promises = [];
+
+    for (let img of images) {
+        if (!img.complete) {
+            promises.push(new Promise(resolve => {
+                img.onload = img.onerror = resolve;
+            }));
+        }
+    }
+
+    await Promise.all(promises);
+
+    // small extra delay for safety
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     html2pdf().from(pdfArea).set({
         margin: 0,
         filename: "Fee-Receipts.pdf",
@@ -464,7 +486,9 @@ setTimeout(() => {
         },
         pagebreak: { mode: ["css", "legacy"] }
     }).save();
-}, 1000);
+
+});
+
 </script>
 
 </body>
