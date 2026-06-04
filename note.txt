@@ -1,0 +1,19 @@
+1.  index.html - Home Page
+
+2.  new_admission.html - Adding new student
+
+3.  students.html - View all students and download the list of students
+
+4.  feelogs.html - View all paid fee receipts
+
+5.  multiple_receipt.html - Print for fee receipts
+
+6.  fee_payment.html - For making fee payment
+
+7.  receipt.html - Print of the current paid receipt when fee payment done
+
+8.  diary_search.html - View all students to make print the diary cover
+
+9.  diary.html - Print for diary cover
+
+10. fee_dues.html - Filter students to get amount paid less than given amount and download the student list

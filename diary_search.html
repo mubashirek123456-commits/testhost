@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fee Logs</title>
+<title>Diary</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -110,6 +110,14 @@ th{
     position:sticky;
     top:0;
 }
+
+th:first-child, td:first-child {
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+    text-align: center;
+}
+
 </style>
 </head>
 
@@ -120,28 +128,28 @@ th{
 </div>
 
 <div class="top-bar">
-    <span>Fee Logs</span>
+    <span>Diary</span>
     <span id="totalReceivedSpan"></span>
-    <button id="downloadBtn">Download Receipts</button>
+    <button id="downloadBtn">Download Diary</button>
 </div>
 
 <div class="filters">
-    <select id="classFilter">
-        <option value="">All Classes</option>
-        <option>8</option>
-        <option>9</option>
-        <option>10</option>
-    </select>
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
 
-    <select id="mediumFilter">
-        <option value="">All Medium</option>
-        <option>EM</option>
-        <option>MM</option>
-    </select>
+<select id="mediumFilter">
+<option value="">All Medium</option>
+<option>EM</option>
+<option>MM</option>
+</select>
 
-    <input id="nameFilter" placeholder="Student Name">
-    <input id="admFilter" placeholder="Admission No">
-    <input id="billFilter" placeholder="Bill No (eg:31110,31115,..)">
+<input id="nameFilter" placeholder="Student Name">
+<input id="admFilter" placeholder="Admission No">
+<input type="date" id="dateFilter">
 </div>
 
 <div class="table-wrapper">
@@ -149,18 +157,11 @@ th{
 <thead>
 <tr>
 <th><input type="checkbox" id="selectAll"></th>
-<th>Date</th>
-<th>Bill</th>
-<th>Adm</th>
+<th>Admission Date</th>
+<th>Admission No</th>
 <th>Name</th>
 <th>Class</th>
 <th>Medium</th>
-<th>Total Fee</th>
-<th>Prev Paid</th>
-<th>Paid Amount</th>
-<th>Pay Mode</th>
-<th>Balance</th>
-<th>Due Date</th>
 </tr>
 </thead>
 <tbody id="tableBody"></tbody>
@@ -174,7 +175,7 @@ const classFilter = document.getElementById("classFilter");
 const mediumFilter = document.getElementById("mediumFilter");
 const nameFilter = document.getElementById("nameFilter");
 const admFilter = document.getElementById("admFilter");
-const billFilter = document.getElementById("billFilter");
+const dateFilter = document.getElementById("dateFilter");
 const selectAll = document.getElementById("selectAll");
 
 let data = [];
@@ -189,46 +190,59 @@ selectAll.addEventListener("change",()=>{
 /* 🔥 LOAD FROM BACKEND */
 async function load(){
     try{
-        const res = await fetch("http://localhost:8000/feelogs");   // 🔥 change if endpoint name different
-        // const res = await fetch("https://testbackend-99um.onrender.com/feelogs");   // 🔥 change if endpoint name different
-        data_res = await res.json();
-
-        data = data_res.feelogs;
-
-        totalReceived = data_res.total_received;
+        const res = await fetch("http://localhost:8000/students");   // 🔥 change if endpoint name different
+        data = await res.json();
 
         render(data);
     }catch(e){
-        alert("Failed to load fee logs");
+        alert("Failed to load diary students");
+        console.error(e);
     }
 }
 load();
 
 /* render */
-function render(list){
+function render(students){
     tableBody.innerHTML="";
-    filteredData = list;
-    document.getElementById("totalReceivedSpan").innerText = `Total Received: ₹${totalReceived}`;
-    list.forEach(r=>{
+    selectAll.checked = false;   // reset
+    filteredData = students;
+    students.forEach(r=>{
         tableBody.innerHTML+=`
         <tr style="text-align:center;">
             <td>
-                <input type="checkbox" class="rowCheck" data-bill="${r.bill_no}">
+                <input type="checkbox" class="rowCheck" data-adm="${r.adm_no}">
             </td>
-            <td>${r.bill_date}</td>
-            <td><b>${r.bill_no}</b></td>
+            <td>${r.adm_date}</td>
             <td>${r.adm_no}</td>
             <td>${r.std_name}</td>
             <td>${r.std_class}</td>
             <td>${r.medium}</td>
-            <td>${r.total_fee}</td>
-            <td>${r.prev_paid}</td>
-            <td>${r.paid_amt}</td>
-            <td>${r.payment_method}</td>
-            <td>${r.balance}</td>
-            <td>${r.due_date}</td>
         </tr>`;
     });
+}
+
+function formatDateToISO(dateStr){
+    // "25 Feb 2026" → Date object
+    const parts = dateStr.split(" ");
+
+    const day = parseInt(parts[0]);
+
+    const monthMap = {
+        Jan:0, Feb:1, Mar:2, Apr:3,
+        May:4, Jun:5, Jul:6, Aug:7,
+        Sep:8, Oct:9, Nov:10, Dec:11
+    };
+
+    const month = monthMap[parts[1]];
+    const year = parseInt(parts[2]);
+
+    return new Date(year, month, day);
+}
+
+function normalizeDate(d){
+    const nd = new Date(d);
+    nd.setHours(0,0,0,0);
+    return nd;
 }
 
 /* filter */
@@ -237,20 +251,26 @@ function filterData(){
     const m = mediumFilter.value.toLowerCase();
     const n = nameFilter.value.toLowerCase();
     const a = admFilter.value.toLowerCase();
-    const b = billFilter.value.toLowerCase()==="bill-2026-" ? "" : billFilter.value.toLowerCase();
+    const d = dateFilter.value;
 
-    const filtered = data.filter(r=>
-        (!c || r.std_class.toLowerCase()==c) &&
-        (!m || r.medium.toLowerCase()==m) &&
-        (!n || r.std_name.toLowerCase().includes(n)) &&
-        (!a || String(r.adm_no).toLowerCase().includes(a)) &&
-        (!b || r.bill_no.toLowerCase().includes(b))
-    );
+    const selectedDate = d ? normalizeDate(new Date(d)) : null;
+
+    const filtered = data.filter(r=>{
+        const recordDate = formatDateToISO(r.adm_date);
+
+        return (
+            (!c || String(r.std_class).toLowerCase()==c) &&
+            (!m || String(r.medium).toLowerCase()==m) &&
+            (!n || String(r.std_name).toLowerCase().includes(n)) &&
+            (!a || String(r.adm_no).toLowerCase().includes(a)) &&
+            (!selectedDate || recordDate >= selectedDate)
+        );
+    });
 
     render(filtered);
 }
 
-[classFilter,mediumFilter,nameFilter,admFilter,billFilter]
+[classFilter,mediumFilter,nameFilter,admFilter,dateFilter]
 .forEach(el=>el.addEventListener("input",filterData));
 
 document.getElementById("downloadBtn").addEventListener("click",()=>{
@@ -258,23 +278,21 @@ document.getElementById("downloadBtn").addEventListener("click",()=>{
     const selected = [];
 
     document.querySelectorAll(".rowCheck:checked").forEach(cb=>{
-        const bill = cb.dataset.bill;
-        const receiptData = data.find(d=> d.bill_no === bill);
-        if(receiptData) selected.push(receiptData);
+        const adm = cb.dataset.adm;
+        const diaryData = data.find(d=> String(d.adm_no) === String(adm));
+        if(diaryData) selected.push(diaryData);
     });
 
     if(!selected.length){
-        alert("Select at least one receipt");
+        alert("Select at least one student");
         return;
     }
 
-    sessionStorage.setItem("multi_receipts", JSON.stringify(selected));
+    sessionStorage.setItem("multi_diaries", JSON.stringify(selected));
 
     console.log(selected);
 
-    setTimeout(()=>{
-        window.open("multiple_receipt.html","_blank");
-    },100);
+    window.open("diary.html","_blank");
 });
 
 </script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Students</title>
+<title>Fee Dues</title>
 
 <!-- pdf generator -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -81,22 +81,28 @@ body{
     font-size:22px;
 }
 
+@media (min-width:480px){
+    .std-count-div{display:flex;column-gap: 20px;}
+}
+
 /* 🔥 Responsive Filters */
 .filters{
     display:grid;
-    gap:12px;
+    gap:10px;
     margin-bottom:20px;
     grid-template-columns:1fr;
 }
+
 @media (min-width:480px){
     .filters{grid-template-columns:repeat(2,1fr)}
-    .std-count-div{display:flex;column-gap: 20px;}
 }
+
 @media (min-width:768px){
-    .filters{grid-template-columns:repeat(auto,1fr)}
+    .filters{grid-template-columns:repeat(3,1fr)}
 }
+
 @media (min-width:1024px){
-    .filters{grid-template-columns:repeat(5,1fr)}
+    .filters{grid-template-columns:repeat(4,1fr)}
 }
 
 .filters input, .filters select{
@@ -105,6 +111,18 @@ body{
     font-size:16px;
     border:1px solid #ddd;
     border-radius:6px;
+}
+
+.feeFilterDiv{
+    display:flex;
+    align-items:center;
+    gap:3px;
+}
+
+.filters .feeFilterDiv span{
+    font-size:16px;
+    font-weight:600;
+    white-space: nowrap;
 }
 
 /* 🔥 Table */
@@ -142,7 +160,7 @@ th{
 </div>
 
 <div class="top-bar">
-    <span>Students</span>
+    <span>Fee Dues</span>
     <button id="downloadBtn">Download List</button>
 </div>
 
@@ -153,26 +171,28 @@ th{
 
 <!-- 🔥 Filters -->
 <div class="filters">
-    <input id="admFilter" placeholder="Admission No">
-    <input id="nameFilter" placeholder="Student Name">
-    <input id="dateFilter" placeholder="Admission Date eg: 9 Feb 2025">
 
-    <select id="schoolFilter">
-        <option value="">All Schools</option>
-    </select>
-    
     <select id="classFilter">
         <option value="">All Classes</option>
         <option>8</option>
         <option>9</option>
         <option>10</option>
     </select>
-
+    
     <select id="mediumFilter">
         <option value="">All Medium</option>
         <option>EM</option>
         <option>MM</option>
     </select>
+
+    <select id="schoolFilter">
+        <option value="">All Schools</option>
+    </select>
+
+    <div class="feeFilterDiv">
+        <span>Fee less than :</span><input id="feeAmt" placeholder="Amount">
+    </div>
+
 </div>
 
 <!-- 🔥 Table -->
@@ -204,12 +224,10 @@ const tableBody = document.getElementById("tableBody");
 const totalStdCount = document.getElementById("totalstdcount");
 const filteredStdCount = document.getElementById("filterstdcount");
 
-const admFilter = document.getElementById("admFilter");
-const nameFilter = document.getElementById("nameFilter");
-const dateFilter = document.getElementById("dateFilter");
-const schoolFilter = document.getElementById("schoolFilter");
 const classFilter = document.getElementById("classFilter");
 const mediumFilter = document.getElementById("mediumFilter");
+const schoolFilter = document.getElementById("schoolFilter");
+const feeFilter = document.getElementById("feeAmt");
 
 let data = [];
 let currentFilteredData = [];
@@ -294,41 +312,36 @@ function loadSchoolDropdown(data){
 
 /* 🔥 Filter */
 function filterData(){
-    const a = admFilter.value.toLowerCase();
-    const n = nameFilter.value.toLowerCase();
-    const d = dateFilter.value.toLowerCase();
-    const s = schoolFilter.value.toLowerCase();
+    const feeAmt = feeFilter.value;
     const c = classFilter.value.toLowerCase();
     const m = mediumFilter.value.toLowerCase();
+    const s = schoolFilter.value.toLowerCase();
 
     const filtered = data.filter(r =>
-        (!a || String(r.adm_no).toLowerCase().includes(a)) &&
-        (!n || r.std_name.toLowerCase().includes(n)) &&
-        (!d || r.adm_date.toLowerCase().includes(d)) &&
-        (!s || r.school.toLowerCase().includes(s)) &&
+        (!feeAmt || parseFloat(r.prev_paid) < parseFloat(feeAmt)) &&
         (!c || r.std_class.toLowerCase() === c) &&
-        (!m || r.medium.toLowerCase() === m)
+        (!m || r.medium.toLowerCase() === m) &&
+        (!s || r.school.toLowerCase() === s)
     );
 
     currentFilteredData = filtered;
     render(filtered);
 }
 
-[admFilter,nameFilter,dateFilter,schoolFilter,classFilter,mediumFilter].forEach(el=>{
+[feeFilter, classFilter, mediumFilter, schoolFilter].forEach(el=>{
     el.addEventListener("input",filterData);
 });
 
-/* 🔥 Generate PDF */
 async function generatePDF(){
 
+    const feeLessThan = feeFilter.value || "None";
     const schoolName = schoolFilter.value || "All Schools";
     const schoolClass = classFilter.value || "All";
     const schoolMedium = mediumFilter.value || "All";
-    
-    const subHeading = `Students List of ${schoolName} (Class: ${schoolClass}) (Medium: ${schoolMedium})`;
-    
-    const saveFileName = `Students_List.pdf`;
 
+    const subHeading = `Students List of ${schoolName} (Fee paid <${feeLessThan}) (Class: ${schoolClass}) (Medium: ${schoolMedium})`;
+
+    const saveFileName = `Fee_Due_List_${schoolName}_FeeLessThan_${feeLessThan}_Class_${schoolClass}_Medium_${schoolMedium}.pdf`;
 
     const { jsPDF } = window.jspdf;
 
@@ -347,9 +360,9 @@ async function generatePDF(){
             index + 1,
             r.adm_no,
             r.std_name,
-            r.school,
-            r.std_class,
-            r.medium
+            r.total_fee,
+            r.prev_paid,
+            r.balance
         ]);
 
     });
@@ -362,9 +375,9 @@ async function generatePDF(){
             "Sl No",
             "Adm No",
             "Name",
-            "School",
-            "Class",
-            "Medium"
+            "Total Fee",
+            "Total Paid",
+            "Balance"
         ]],
 
         body: body,

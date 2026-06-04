@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diary</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Bodoni&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+@page {
+    size: A4 portrait;
+    margin: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body.loading {
+    overflow: hidden; /* prevent scroll */
+}
+
+#loader {
+    position: fixed;
+    inset: 0;
+
+    width: 100vw;
+    height: 100vh;  /* 🔥 FIX for mobile + tablets */
+    min-height: 100dvh;
+
+    background: #ffffff;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+.loader-box {
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+}
+
+/* title */
+.loader-title {
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 600;
+}
+
+/* progress container */
+.progress-container {
+    width: 100%;
+    height: 10px;
+    background: #ddd;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+/* progress bar */
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: #1e293b;
+    transition: width 0.2s;
+}
+
+/* progress text */
+#progressText {
+    font-size: 14px;
+    word-break: break-word;
+}
+
+#diaryRoot {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 0;
+    height: 0;
+
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 297mm;
+    width: 210mm;
+    background: #acb9ca;
+    box-sizing: border-box;
+    page-break-after: always; /* 🔥 important */
+}
+
+.diary-page {
+    width: 100%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: 12px;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+    overflow: hidden;
+    padding-top: 24px;
+    break-inside: avoid;
+}
+
+.diary-dp {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    height: 165px;
+    background: #fff;
+    border: 2px solid #000;
+    font-size: larger;
+}
+
+.diary-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Libre Bodoni', serif;
+    font-size: 32px;
+    font-weight: bolder;
+    letter-spacing: 4px;
+}
+
+.diary-std-details {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #fff;
+    box-sizing: border-box;
+    padding: 12px 21px;
+    gap: 15px;
+}
+
+.diary-std-details span {
+    font-weight: bold;
+    font-size: larger;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: auto;
+}
+
+.row.admission {
+    width: 50%;
+}
+
+.row.admission .line {
+    flex: 1;
+    width: auto;
+}
+
+.row.small {
+    width: 23%;
+}
+
+.row.full {
+    width: 100%;
+}
+
+.line {
+    flex: 1;
+    width: 80px;
+    border-bottom: 2px dashed black;
+    text-align: center;
+    font-weight: bold;
+    font-size: large;
+    min-height: 20px;
+}
+
+.diary-logo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.diary-logo img {
+    height: 120px;
+}
+
+.diary-org-info {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.org-address, .org-contact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: bold;
+}
+
+.org-address img, .org-contact img {
+    width: 24px;
+    height: 24px;
+}
+.diary-page:first-child {
+    border-bottom: 1px dashed #000;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Loader -->
+<div id="loader">
+    <div class="loader-box">
+
+        <div class="loader-title">
+            Preparing PDF...
+        </div>
+
+        <div class="progress-container">
+            <div id="progressBar"></div>
+        </div>
+
+        <div id="progressText">0%</div>
+
+    </div>
+</div>
+
+<!-- 🔥 Dynamic content goes here -->
+<div id="diaryRoot"></div>
+
+<script>
+const root = document.getElementById("diaryRoot");
+
+/* 🔥 LOAD DIARY DATA */
+function loadDiary(){
+    document.body.classList.add("loading");
+    const stored = sessionStorage.getItem("multi_diaries");
+
+    if(!stored){
+        document.body.innerHTML = "<h2 style='text-align:center'>No data found</h2>";
+        return;
+    }
+
+    const students = JSON.parse(stored);
+
+    renderDiary(students); // 🔥 chunk rendering handles rest
+}
+
+async function generatePDF(){
+
+    const { jsPDF } = window.jspdf;
+    const zip = new JSZip();   // 🔥 ZIP container
+
+    const pages = document.querySelectorAll(".main-container");
+
+    const totalWork = pages.length;  // total pages to process
+    let workDone = 0;
+
+    const maxPagesPerPDF = 50;
+    const totalPDFs = Math.ceil(pages.length / maxPagesPerPDF);
+
+    for(let pdfIndex = 0; pdfIndex < totalPDFs; pdfIndex++){
+
+        const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4"
+        });
+
+        const start = pdfIndex * maxPagesPerPDF;
+        const end = Math.min(start + maxPagesPerPDF, pages.length);
+
+        for(let i = start; i < end; i++){
+
+            const canvas = await html2canvas(pages[i], {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: "#ffffff"
+            });
+
+            workDone++;
+
+            const percent = Math.floor((workDone / totalWork) * 100);
+
+            progressBar.style.width = percent + "%";
+            progressText.innerText = `Creating PDF ${pdfIndex+1}/${totalPDFs} (${percent}%)`;
+
+            const imgData = canvas.toDataURL("image/jpeg", 0.9);
+
+            if(i !== start) pdf.addPage();
+
+            pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+        }
+
+        // 🔥 instead of saving → add to ZIP
+        const blob = pdf.output("blob");
+        zip.file(`Diary_Part_${pdfIndex+1}.pdf`, blob);
+    }
+
+    // 🔥 ONE download
+    const zipBlob = await zip.generateAsync(
+        { type: "blob" },
+        function(metadata){
+            const percent = Math.floor(metadata.percent);
+
+            progressBar.style.width = percent + "%";
+            progressText.innerText = `Finalizing ZIP (${percent}%)`;
+        }
+    );
+
+    progressBar.style.width = "100%";
+    progressText.innerText = "Download ready...";
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(zipBlob);
+    link.download = "Diary_All.zip";
+    link.click();
+
+    progressText.innerText = "Download completed!";
+
+    setTimeout(() => {
+        window.close();
+
+        // fallback
+        setTimeout(() => {
+            window.location.href = "about:blank";
+        }, 500);
+
+    }, 800);
+}
+
+function finishRendering(){
+
+    const loader = document.getElementById("loader");
+
+    setTimeout(async ()=>{
+
+        await generatePDF();   // 🔥 multi PDF
+
+        document.body.classList.remove("loading");
+        document.getElementById("loader").style.display = "none";
+
+        loader.style.display = "none";
+
+    }, 300);
+}
+
+/* 🔥 RENDER PAGES (2 per page) */
+function renderDiary(students){
+    root.innerHTML = "";
+
+    const chunkSize = 10; // 🔥 adjust (10–20 best)
+    let index = 0;
+
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+
+    function renderChunk(){
+
+        const end = Math.min(index + chunkSize, students.length);
+
+        for(let i = index; i < end; i += 2){
+
+            const page = document.createElement("div");
+            page.className = "main-container";
+
+            page.appendChild(createStudentPage(students[i]));
+
+            if(students[i+1]){
+                page.appendChild(createStudentPage(students[i+1]));
+            }
+
+            root.appendChild(page);
+        }
+
+        index = end;
+
+        // 🔥 UPDATE PROGRESS
+        let percent = Math.floor((index / students.length) * 100);
+
+        // 🔥 keep it at 99% until fully ready
+        if(percent === 100 && index < students.length){
+            percent = 99;
+        }
+        progressBar.style.width = percent + "%";
+        progressText.innerText = percent + "%";
+
+        if(index < students.length){
+            requestAnimationFrame(renderChunk); // 🔥 next chunk
+        }else{
+            // ✅ DONE
+            finishRendering();
+        }
+    }
+
+    renderChunk();
+}
+
+/* 🔥 CREATE SINGLE STUDENT PAGE */
+function createStudentPage(s){
+    const div = document.createElement("div");
+    div.className = "diary-page";
+
+    div.innerHTML = `
+        <div class="diary-profile-img">
+            <div class="diary-dp">
+                <span>Photo</span>
+                <span>of the</span>
+                <span>Student</span>
+            </div>
+        </div>
+
+        <div class="diary-title">
+            <span>STUDENT'S DIARY & REPORT CARD</span>
+        </div>
+
+        <div class="diary-std-details">
+            <div class="row full">
+                <span>Name:</span>
+                <div class="line">${s.std_name || ""}</div>
+            </div>
+
+            <div class="row admission">
+                <span>Admission No:</span>
+                <div class="line">${s.adm_no || ""}</div>
+            </div>
+
+            <div class="row small">
+                <span>Class:</span>
+                <div class="line">${s.std_class || ""}</div>
+            </div>
+
+            <div class="row small">
+                <span>Div:</span>
+                <div class="line"></div>
+            </div>
+        </div>
+
+        <div class="diary-logo">
+            <img src="assets/logo_design.png">
+        </div>
+
+        <div class="diary-org-info">
+            <div class="org-address">
+                <img src="assets/gps.png"/>
+                <span>Near G.H.S.S, Othukungal</span>
+            </div>
+
+            <div class="org-contact">
+                <img src="assets/phone.png"/>
+                <span>7736700221, 7994200221</span>
+            </div>
+        </div>
+    `;
+
+    return div;
+}
+
+/* 🔥 INIT */
+loadDiary();
+
+/* 🔥 REMOVE DATA AFTER PRINTING */
+window.onafterprint = () => {
+    sessionStorage.removeItem("multi_diaries");
+};
+</script>
+
+</body>
+</html>
