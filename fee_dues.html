@@ -239,8 +239,8 @@ document.getElementById("downloadBtn").addEventListener("click", generatePDF);
 /* 🔥 Load students */
 async function load(){
     try{
-        const res = await fetch("http://localhost:8000/students");
-        // const res = await fetch("https://testbackend-99um.onrender.com/students");
+        // const res = await fetch("http://localhost:8000/students");
+        const res = await fetch("https://testbackend-99um.onrender.com/students");
         data = await res.json();
 
         totalStudentsCount = data.length;
