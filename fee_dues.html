@@ -321,7 +321,7 @@ function filterData(){
         (!feeAmt || (
             parseFloat(r.balance) != 0 &&
             parseFloat(r.prev_paid) < parseFloat(feeAmt)
-        ))
+        )) &&
         (!c || r.std_class.toLowerCase() === c) &&
         (!m || r.medium.toLowerCase() === m) &&
         (!s || r.school.toLowerCase() === s)
